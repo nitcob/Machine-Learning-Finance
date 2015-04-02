@@ -1,8 +1,4 @@
 
-# coding: utf-8
-
-# In[ ]:
-
 import pandas as pd
 import os
 import time
@@ -16,15 +12,11 @@ import re
 from sklearn import svm
 
 
-# In[ ]:
+path = '/home/nitcob/Dropbox/Thinkful/projects/cap/intraQuarter'
 
-path = '/home/nitcob/Dropbox/Thinkful/projects/cap/intraQuarter' 
-
-
-# In[ ]:
 
 #gathering the data
-def Key_Stats(gather = gather=["Total Debt/Equity",
+def Key_Stats(gather = ["Total Debt/Equity",
                       'Trailing P/E',
                       'Price/Sales',
                       'Price/Book',
@@ -59,7 +51,7 @@ def Key_Stats(gather = gather=["Total Debt/Equity",
                         'Short Ratio',
                         'Short % of Float',
                         'Shares Short (prior ']):
-    
+
     statspath = path+'/_KeyStats'
     stock_list = [x[0] for x in os.walk(statspath)]
     #print (stock_list)
@@ -106,25 +98,25 @@ def Key_Stats(gather = gather=["Total Debt/Equity",
                                  'Shares Short (as of',
                                  'Short Ratio',
                                  'Short % of Float',
-                                 'Shares Short (prior ',                                
+                                 'Shares Short (prior ',
                                  ##############
                                  'Status'])
-    
+
 ticker_list = []
 
     sp500_df = pd.DataFrame.from_csv("YAHOO-INDEX_GSPC.csv")
 
-    
+
     for each_dir in stock_list[1:500]:
         ticker = each_dir.split("\\")[1]
         each_file = os.listdir(each_dir)
         ticker_list.append(ticker)
-        
+
         starting_stock_value = False
         starting_sp500_value = False
-        
+
         if len(each_file) > 0:
-            
+
             for file in each_file:
 
                 date_stamp = datetime.strptime(file, '%Y%m%d%H%M%S.html')
@@ -150,12 +142,12 @@ ticker_list = []
                                 value = float(value.replace("M",''))*1000000
 
                             value_list.append(value)
-                            
-                            
+
+
                         except Exception as e:
                             value = "N/A"
                             value_list.append(value)
-                            
+
                     #print("stock_price:",stock_price,"ticker:"ticker)
                                         try:
                         sp500_date = datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d')
@@ -188,43 +180,43 @@ ticker_list = []
 
                             #print('stock price',str(e),ticker,file)
                             #time.sleep(15)
-                        
+
                     #print("stock_price:",stock_price,"ticker:", ticker)
- 
+
                     if not starting_stock_value:
                         starting_stock_value = stock_price
-                        
+
                     if not starting_sp500_value:
                         starting_stock_value = sp500_value
-                     
+
                     stock_p_change = ((stock_price - starting_stock_value) /(starting_stock_value) * 100 )
-                    
+
                     sp500_p_change = ((sp500_value - starting_sp500_value) /(starting_sp500_value) * 100 )
-                    
+
                     difference = stock_p_change-sp500_p_change
-                    
+
                     if difference > 0:
                         status = "outperform"
-                        
+
                     else:
                         status = "underperform"
-                        
+
                     if value_list.count("N/A") > 0:
                         pass
-                
+
                           df = df.append({'Date':date_stamp,
                                             'Unix':unix_time,
                                             'Ticker':ticker,
                                             'Unix':unix_time,
                                             'Ticker':ticker,
-                                            
+
                                             'Price':stock_price,
                                             'stock_p_change':stock_p_change,
                                             'SP500':sp500_value,
                                             'sp500_p_change':sp500_p_change,
                                             'Difference':difference,
                                             'DE Ratio':value_list[0],
-                                            #'Market Cap':value_list[1],
+
                                             'Trailing P/E':value_list[1],
                                             'Price/Sales':value_list[2],
                                             'Price/Book':value_list[3],
@@ -268,12 +260,9 @@ ticker_list = []
 
 
     df.to_csv("key_stats.csv")
-    
+
 
 Key_Stats()
-
-
-# In[ ]:
 
 # run svm model from Debt/Equity value versus the performance on the market
 
@@ -293,15 +282,12 @@ def Build_Data_Set(features = ["DE Ratio",
 
     return X,y
 
-
-# In[ ]:
-
 def Analysis():
     X, y = Build_Data_Set()
 
     clf = svm.SVC(kernel="linear", C= 1.0)
     clf.fit(X,y)
-    
+
     w = clf.coef_[0]
     a = -w[0] / w[1]
     xx = np.linspace(min(X[:, 0]), max(X[:, 0]))
@@ -315,8 +301,7 @@ def Analysis():
     plt.legend()
 
     plt.show()
-    
+
 Analysis()
 
 '''The red dots are the out-performers and the blue dots are under-performers. we can see that the stocks with low Debt/Equity value tend to autbperform.'''
-
